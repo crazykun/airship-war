@@ -21,6 +21,9 @@ type Config struct {
 	MaxBulletNum      int        `json:"maxBulletNum"`      // 最大子弹数量
 	BulletInterval    int64      `json:"bulletInterval"`    // 子弹发射间隔
 	AlienSpeedFactor  float64    `json:"alienSpeedFactor"`  // 外星人移动速度
+	TitleFontSize     int        `json:"titleFontSize"`     // 标题字体大小
+	FontSize          int        `json:"fontSize"`          // 字体大小
+	SmallFontSize     int        `json:"smallFontSize"`     // 小字体大小
 }
 
 func loadConfig() *Config {

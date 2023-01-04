@@ -18,7 +18,10 @@
     "b": 80,
     "a": 255
   },
-  "maxBulletNum": 10,
+  "maxBulletNum": 20,
   "bulletInterval": 50,
-  "alienSpeedFactor" : 1
+  "alienSpeedFactor" : 1,
+  "titleFontSize" : 18,
+  "fontSize" : 15,
+  "smallFontSize" : 13
 }
