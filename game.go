@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image/color"
 	"log"
+	"math/rand"
 	"strconv"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -17,13 +18,16 @@ import (
 // Game represents the game.
 // Game结构体
 type Game struct {
-	mode    Mode
-	i       uint8
-	input   *Input
-	cfg     *Config
-	ship    *Ship
-	bullets map[*Bullet]struct{}
-	aliens  map[*Alien]struct{} // Game结构中的map用来存储外星人对象
+	mode      Mode
+	i         uint8
+	input     *Input
+	cfg       *Config
+	ship      *Ship
+	bullets   map[*Bullet]struct{}
+	aliens    map[*Alien]struct{} // Game结构中的map用来存储外星人对象
+	succCount int                 // Game结构中的succCount用来记录成功消灭的外星人数量
+	failCount int                 // Game结构中的failCount用来记录失败的外星人数量
+	overMsg   string              // Game结构中的overMsg用来记录游戏结束时的提示信息
 }
 
 var (
@@ -53,14 +57,19 @@ func NewGame() *Game {
 func (g *Game) init() {
 	// 调用 CreateAliens 创建一组外星人
 	g.CreateAliens()
+	// 调用 CreateFonts 创建字体
 	g.CreateFonts()
+	// 调用 Reset 重置游戏
+	g.succCount = 0
+	g.failCount = 0
+	g.overMsg = ""
 }
 
 // 帧， 每个tick都会被调用。tick是引擎更新的一个时间单位，默认为1/60s
 func (g *Game) Update() error {
 	switch g.mode {
 	case ModeTitle:
-		if g.input.IsKeyPressed() {
+		if g.input.IsKeyStartPressed() {
 			g.mode = ModeGame
 		}
 	case ModeGame:
@@ -75,10 +84,22 @@ func (g *Game) Update() error {
 		for alien := range g.aliens {
 			alien.y += alien.speedFactor
 		}
+
+		// 检查外星人是否出界
+		for alien := range g.aliens {
+			if alien.outOfScreen(g.cfg) {
+				g.failCount++
+				delete(g.aliens, alien)
+				continue
+			}
+		}
+
+		// 根据玩家操作更新飞船和子弹
 		g.input.Update(g)
+		// 检查碰撞
 		g.CheckCollision()
 	case ModeOver:
-		if g.input.IsKeyPressed() {
+		if g.input.IsKeyStartPressed() {
 			g.init()
 			g.mode = ModeTitle
 		}
@@ -99,6 +120,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	var titleTexts []string
 	var texts []string
+	var smalltexts []string
 	switch g.mode {
 	case ModeTitle:
 		titleTexts = []string{"ALIEN INVASION"}
@@ -117,10 +139,11 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		}
 
 		// 输出帧率和tps
-		ebitenutil.DebugPrint(screen, fmt.Sprintf("Hello, Airship War!\nTPS: %0.2f\nFPS: %0.2f", ebiten.ActualTPS(), ebiten.ActualFPS()))
+		ebitenutil.DebugPrint(screen, fmt.Sprintf("Hello, Airship War!\nTPS: %0.2f\nFPS: %0.2f\nSucc Num:%d\nFail Num:%d", ebiten.ActualTPS(), ebiten.ActualFPS(), g.succCount, g.failCount))
 
 	case ModeOver:
-		texts = []string{"", "GAME OVER!"}
+		texts = []string{"", g.overMsg, "", "", "", "", "PRESS SPACE KEY", "", "OR LEFT MOUSE", "", "TO RESTART"}
+		smalltexts = []string{"", "", "", "", "score:" + strconv.Itoa(g.succCount)}
 	}
 
 	for i, l := range titleTexts {
@@ -130,6 +153,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	for i, l := range texts {
 		x := (g.cfg.ScreenWidth - len(l)*g.cfg.FontSize) / 2
 		text.Draw(screen, l, arcadeFont, x, (i+4)*g.cfg.FontSize, color.White)
+	}
+	for i, l := range smalltexts {
+		x := (g.cfg.ScreenWidth - len(l)*g.cfg.SmallFontSize) / 2
+		text.Draw(screen, l, smallArcadeFont, x, (i+4)*g.cfg.SmallFontSize, color.White)
 	}
 }
 
@@ -147,17 +174,14 @@ func (g *Game) addBullet(bullet *Bullet) {
 // 创建外星人
 func (g *Game) CreateAliens() {
 	alien := NewAlien(g.cfg)
-
 	availableSpaceX := g.cfg.ScreenWidth - 2*alien.width
-	numAliens := availableSpaceX / (2 * alien.width)
+	availableNum := availableSpaceX / (2 * alien.width)
 
-	for row := 0; row < 2; row++ {
-		for i := 0; i < numAliens; i++ {
-			alien = NewAlien(g.cfg)
-			alien.x = float64(alien.width + 2*alien.width*i)
-			alien.y = float64(alien.height*row) * 1.5
-			g.addAlien(alien)
-		}
+	for row := 1; row <= g.cfg.AlienNum; row++ {
+		alien = NewAlien(g.cfg)
+		alien.x = float64(alien.width + 2*alien.width*rand.Intn(availableNum))
+		alien.y = -float64(alien.height*row) * 1.5
+		g.addAlien(alien)
 	}
 }
 
@@ -168,13 +192,36 @@ func (g *Game) addAlien(alien *Alien) {
 
 // 检查碰撞
 func (g *Game) CheckCollision() {
+	// 检查外星人和子弹的碰撞
 	for alien := range g.aliens {
 		for bullet := range g.bullets {
-			if CheckCollision(bullet, alien) {
+			if CheckCollision(alien, bullet) {
+				g.succCount++
 				delete(g.aliens, alien)
 				delete(g.bullets, bullet)
 			}
 		}
+	}
+
+	// 检查外星人和飞船的碰撞
+	for alien := range g.aliens {
+		if CheckCollision(g.ship, alien) {
+			delete(g.aliens, alien)
+			g.overMsg = "GAME OVER"
+			g.mode = ModeOver
+		}
+	}
+
+	// 消灭所有外星人
+	if g.succCount+g.failCount == g.cfg.AlienNum {
+		g.overMsg = "YOU WIN"
+		g.mode = ModeOver
+	}
+
+	// 游戏结束,清空外星人和子弹
+	if g.mode == ModeOver {
+		g.aliens = make(map[*Alien]struct{})
+		g.bullets = make(map[*Bullet]struct{})
 	}
 }
 

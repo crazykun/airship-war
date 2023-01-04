@@ -21,6 +21,7 @@
   "maxBulletNum": 20,
   "bulletInterval": 50,
   "alienSpeedFactor" : 1,
+  "alienNum" : 5,
   "titleFontSize" : 18,
   "fontSize" : 15,
   "smallFontSize" : 13

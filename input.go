@@ -52,8 +52,8 @@ func (i *Input) Update(g *Game) {
 	}
 }
 
-func (i *Input) IsKeyPressed() bool {
-	if ebiten.IsKeyPressed(ebiten.KeySpace) || ebiten.IsKeyPressed(ebiten.KeyLeft) {
+func (i *Input) IsKeyStartPressed() bool {
+	if ebiten.IsKeyPressed(ebiten.KeySpace) || ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 		return true
 	}
 	return false

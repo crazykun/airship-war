@@ -12,11 +12,8 @@ import (
 // Ship represents a ship.
 // Ship结构体表示飞船
 type Ship struct {
-	image  *ebiten.Image
-	width  int
-	height int
-	x      float64 // x坐标
-	y      float64 // y坐标
+	GameObject
+	image *ebiten.Image
 }
 
 func NewShip(screenWidth, screenHeight int) *Ship {
@@ -27,11 +24,13 @@ func NewShip(screenWidth, screenHeight int) *Ship {
 
 	width, height := img.Size()
 	ship := &Ship{
-		image:  img,
-		width:  width,
-		height: height,
-		x:      float64(screenWidth-width) / 2,
-		y:      float64(screenHeight - height),
+		image: img,
+		GameObject: GameObject{
+			width:  width,
+			height: height,
+			x:      float64(screenWidth-width) / 2,
+			y:      float64(screenHeight - height),
+		},
 	}
 
 	return ship

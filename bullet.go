@@ -9,11 +9,8 @@ import (
 // Bullet represents a bullet fired by the ship.
 // Bullet结构体表示飞船发射的子弹
 type Bullet struct {
+	GameObject
 	image       *ebiten.Image
-	width       int
-	height      int
-	x           float64
-	y           float64
 	speedFactor float64
 }
 
@@ -23,11 +20,13 @@ func NewBullet(cfg *Config, ship *Ship) *Bullet {
 	img.Fill(cfg.BulletColor)
 
 	return &Bullet{
-		image:       img,
-		width:       cfg.BulletWidth,
-		height:      cfg.BulletHeight,
-		x:           ship.x + float64(ship.width-cfg.BulletWidth)/2,
-		y:           float64(cfg.ScreenHeight - ship.height - cfg.BulletHeight),
+		image: img,
+		GameObject: GameObject{
+			width:  cfg.BulletWidth,
+			height: cfg.BulletHeight,
+			x:      ship.x + float64(ship.width-cfg.BulletWidth)/2,
+			y:      float64(cfg.ScreenHeight - ship.height - cfg.BulletHeight),
+		},
 		speedFactor: cfg.BulletSpeedFactor,
 	}
 }
