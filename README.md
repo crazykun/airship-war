@@ -1,5 +1,9 @@
 # airship-war
+
 飞船大战
+
+使用golang的2D游戏引擎ebiten编写
+
 # 使用说明
 ```
 git clone https://github.com/crazykun/airship-war.git
@@ -17,6 +21,7 @@ go run .
 3. 敌方飞艇全部降落后游戏结束，计算得分
 
 # 感谢
+ebiten(https://github.com/hajimehoshi/ebiten)
 go-daily-lib每日一课(https://github.com/darjun/go-daily-lib)
 
 # 教程
