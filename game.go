@@ -9,6 +9,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
+// Game represents the game.
 // Game结构体
 type Game struct {
 	i       uint8
@@ -16,6 +17,7 @@ type Game struct {
 	cfg     *Config
 	ship    *Ship
 	bullets map[*Bullet]struct{}
+	aliens  map[*Alien]struct{} // Game结构中的map用来存储外星人对象
 }
 
 func NewGame() *Game {
@@ -25,12 +27,16 @@ func NewGame() *Game {
 	// 设置窗口标题
 	ebiten.SetWindowTitle(cfg.Title)
 
-	return &Game{
-		input:   &Input{msg: "Hello, World!"},
+	g := &Game{
+		input:   NewInput("Hello, Airship War!"),
 		cfg:     cfg,
 		ship:    NewShip(cfg.ScreenWidth, cfg.ScreenHeight),
 		bullets: make(map[*Bullet]struct{}),
+		aliens:  make(map[*Alien]struct{}),
 	}
+	// 调用 CreateAliens 创建一组外星人
+	g.CreateAliens()
+	return g
 }
 
 // 帧， 每个tick都会被调用。tick是引擎更新的一个时间单位，默认为1/60s
@@ -55,12 +61,19 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.i = 0
 	}
 	// screen.Fill(g.cfg.BgColor)
+	// 绘制飞船
 	g.ship.Draw(screen)
+	// 绘制子弹
 	for bullet := range g.bullets {
 		bullet.Draw(screen)
 	}
+
+	// 绘制外星人
+	for alien := range g.aliens {
+		alien.Draw(screen)
+	}
 	// 输出帧率和tps
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("Hello,ebiten!\nTPS: %0.2f\nFPS: %0.2f", ebiten.ActualTPS(), ebiten.ActualFPS()))
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("Hello, Airship War!\nTPS: %0.2f\nFPS: %0.2f", ebiten.ActualTPS(), ebiten.ActualFPS()))
 
 }
 
@@ -73,6 +86,25 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 // 添加子弹
 func (g *Game) addBullet(bullet *Bullet) {
 	g.bullets[bullet] = struct{}{}
+}
+
+// 创建外星人
+func (g *Game) CreateAliens() {
+	alien := NewAlien(g.cfg)
+
+	availableSpaceX := g.cfg.ScreenWidth - 2*alien.width
+	numAliens := availableSpaceX / (2 * alien.width)
+
+	for i := 0; i < numAliens; i++ {
+		alien = NewAlien(g.cfg)
+		alien.x = float64(alien.width + 2*alien.width*i)
+		g.addAlien(alien)
+	}
+}
+
+// 添加外星人
+func (g *Game) addAlien(alien *Alien) {
+	g.aliens[alien] = struct{}{}
 }
 
 func Hex2RGB(color16 string, alpha uint8) color.RGBA {

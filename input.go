@@ -6,9 +6,19 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+// Input represents the input state.
+// Input结构体表示输入状态
 type Input struct {
 	msg            string
 	lastBulletTime time.Time
+}
+
+func NewInput(msg string) *Input {
+	input := &Input{
+		msg: msg,
+	}
+	// fmt.Println(msg)
+	return input
 }
 
 func (i *Input) Update(g *Game) {

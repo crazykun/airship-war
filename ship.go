@@ -9,6 +9,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
+// Ship represents a ship.
+// Ship结构体表示飞船
 type Ship struct {
 	image  *ebiten.Image
 	width  int

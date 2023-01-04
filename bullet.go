@@ -6,6 +6,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+// Bullet represents a bullet fired by the ship.
+// Bullet结构体表示飞船发射的子弹
 type Bullet struct {
 	image       *ebiten.Image
 	width       int
