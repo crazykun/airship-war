@@ -7,6 +7,8 @@
 # 使用说明
 ```
 git clone https://github.com/crazykun/airship-war.git
+cd airship-war
+go mod tidy
 go run .
 ```
 
