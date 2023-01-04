@@ -213,7 +213,10 @@ func (g *Game) CheckCollision() {
 	}
 
 	// 消灭所有外星人
-	if g.succCount+g.failCount == g.cfg.AlienNum {
+	if g.failCount == g.cfg.AlienNum {
+		g.overMsg = "GAME OVER"
+		g.mode = ModeOver
+	} else if g.succCount+g.failCount == g.cfg.AlienNum {
 		g.overMsg = "YOU WIN"
 		g.mode = ModeOver
 	}
