@@ -22,6 +22,7 @@ go run .
 
 # 感谢
 ebiten(https://github.com/hajimehoshi/ebiten)
+
 go-daily-lib每日一课(https://github.com/darjun/go-daily-lib)
 
 # 教程
