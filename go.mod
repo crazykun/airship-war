@@ -1,4 +1,4 @@
-module aircraft_war
+module airship-war
 
 go 1.19
 
