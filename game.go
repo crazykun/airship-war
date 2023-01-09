@@ -236,7 +236,7 @@ func (g *Game) CheckCollision() {
 	if g.failCount == g.cfg.AlienNum {
 		g.overMsg = "GAME OVER"
 		g.mode = ModeOver
-	} else if g.succCount+g.failCount == g.cfg.AlienNum {
+	} else if g.succCount+g.failCount >= g.cfg.AlienNum {
 		g.overMsg = "YOU WIN"
 		g.mode = ModeOver
 	}
