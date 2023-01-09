@@ -6,6 +6,8 @@ import (
 	"log"
 	"math/rand"
 	"strconv"
+	"sync"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -18,16 +20,18 @@ import (
 // Game represents the game.
 // Game结构体
 type Game struct {
-	mode      Mode
-	i         uint8
-	input     *Input
-	cfg       *Config
-	ship      *Ship
-	bullets   map[*Bullet]struct{}
-	aliens    map[*Alien]struct{} // Game结构中的map用来存储外星人对象
-	succCount int                 // Game结构中的succCount用来记录成功消灭的外星人数量
-	failCount int                 // Game结构中的failCount用来记录失败的外星人数量
-	overMsg   string              // Game结构中的overMsg用来记录游戏结束时的提示信息
+	mode       Mode
+	i          uint8
+	playTimes  uint8
+	input      *Input
+	cfg        *Config
+	ship       *Ship
+	bullets    map[*Bullet]struct{}
+	aliens     map[*Alien]struct{} // Game结构中的map用来存储外星人对象
+	aliensLock sync.Mutex          // 创建外星人锁
+	succCount  int                 // Game结构中的succCount用来记录成功消灭的外星人数量
+	failCount  int                 // Game结构中的failCount用来记录失败的外星人数量
+	overMsg    string              // Game结构中的overMsg用来记录游戏结束时的提示信息
 }
 
 var (
@@ -102,6 +106,7 @@ func (g *Game) Update() error {
 		if g.input.IsKeyStartPressed() {
 			g.init()
 			g.mode = ModeTitle
+			g.playTimes++
 		}
 	}
 	return nil
@@ -177,17 +182,33 @@ func (g *Game) CreateAliens() {
 	availableSpaceX := g.cfg.ScreenWidth - 2*alien.width
 	availableNum := availableSpaceX / (2 * alien.width)
 
-	for row := 1; row <= g.cfg.AlienNum; row++ {
-		alien = NewAlien(g.cfg)
-		alien.x = float64(alien.width + 2*alien.width*rand.Intn(availableNum))
-		alien.y = -float64(alien.height*row) * 1.5
-		g.addAlien(alien)
-	}
+	// 协程定时初始化外星人
+	go func() {
+		for g.succCount < g.cfg.AlienNum {
+			alien = NewAlien(g.cfg)
+			alien.x = float64(alien.width + 2*alien.width*rand.Intn(availableNum))
+			alien.y = -float64(alien.height) * 1.5
+			g.addAlien(alien)
+			time.Sleep(time.Second * 2)
+			fmt.Println(g.playTimes)
+		}
+	}()
+
+	// 默认一次性初始化外星人
+	// for row := 1; row <= g.cfg.AlienNum; row++ {
+	// 	alien = NewAlien(g.cfg)
+	// 	alien.x = float64(alien.width + 2*alien.width*rand.Intn(availableNum))
+	// 	alien.y = -float64(alien.height*row) * 1.5
+	// 	g.addAlien(alien)
+	// }
 }
 
 // 添加外星人
 func (g *Game) addAlien(alien *Alien) {
-	g.aliens[alien] = struct{}{}
+	if g.aliensLock.TryLock() {
+		g.aliens[alien] = struct{}{}
+		g.aliensLock.Unlock()
+	}
 }
 
 // 检查碰撞
