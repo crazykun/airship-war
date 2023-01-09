@@ -190,7 +190,6 @@ func (g *Game) CreateAliens() {
 			alien.y = -float64(alien.height) * 1.5
 			g.addAlien(alien)
 			time.Sleep(time.Second * 2)
-			fmt.Println(g.playTimes)
 		}
 	}()
 
